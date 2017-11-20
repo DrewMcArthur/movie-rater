@@ -9,9 +9,8 @@
 import urllib.request, requests, gzip, ast, yaml
 
 config = yaml.safe_load(open("config.yml"))
-APIKEY = config['tmdbAPIKEY']
-
-# the movie database: tmdb
+TMDB_API_KEY = config['tmdbAPIKEY']
+OMDB_API_KEY = config['omdbAPIKEY']
 
 def getIDs(listOfDates):
     """ return a list of movie IDs
@@ -39,19 +38,50 @@ def getIDs(listOfDates):
                                 for line in unzipped_content]
     return IDs
 
-def getMovieData(ID):
+def getTMDBData(ID):
     """ given a movie ID, use the movie database API to retrieve data """
     uri = "https://api.themoviedb.org/3/movie/{}?api_key={}&language=en-US"
-    return requests.get(uri.format(ID, APIKEY)).json()
+    return requests.get(uri.format(ID, TMDB_API_KEY)).json()
+
+def getOMDBData(ID):
+    """ given an IMDB movie id, use the omdb api to retrieve data """
+    uri = "http://www.omdbapi.com/?i={}&apikey={}"
+    return requests.get(uri.format(ID, OMDB_API_KEY)).json()
+
+def json_print(json, levels=0):
+    """ given some json data, print it out nicely """
+    indent = "\t" * levels
+    if type(json) is dict:
+        for key, value in json.items():
+            if type(value) is list:
+                print(indent + "{ " + key + ": [")
+                for el in value:
+                    json_print(el, levels + 1)
+                print("],")
+            else:
+                print(indent + "{ " + key + ": " + str(value) + " },")
+    elif type(json) is list:
+        print(indent + "[")
+        for obj in json:
+            json_print(obj, levels + 1)
+        print("],")
+    else:
+        print(json)
 
 def main():
     dates = [(11, 17)]
-    IDs = getIDs(dates)
 
-    print("We got {} movie IDs!!!".format(len(IDs)))
-    print(getMovieData(IDs[0]))
-    #data = [getMovieData(ID) for ID in IDs]
-    #print(data[0])
+    #IDs = getIDs(dates)
+    #tmdb_data = [getTMDBData(ID) for ID in IDs]
+
+    #IMDB_IDS = [row['imdb_id'] for row in tmdb_data]
+    #omdb_data = [getOMDBData(ID) for ID in IMDB_IDS]
+
+    row_tmdb = getTMDBData(35)
+    row_omdb = getOMDBData(row_tmdb['imdb_id'])
+
+    json_print(row_tmdb)
+    json_print(row_omdb)
 
 if __name__ == "__main__":
     main()
