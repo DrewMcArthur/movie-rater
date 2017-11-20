@@ -48,8 +48,30 @@ def getOMDBData(ID):
     uri = "http://www.omdbapi.com/?i={}&apikey={}"
     return requests.get(uri.format(ID, OMDB_API_KEY)).json()
 
+def getAllData(TMDBID):
+    """ given a TMDb movie ID, fetch data from TMDb and OMDb and merge the data.
+    """
+    data = getTMDBData(TMDBID)
+
+    # get the OMDb data on the movie, make all keys lowercase, and skip
+    # dict entries that already exist in data (e.g. title, runtime)
+    # we skip them because TMDb saves runtime length as int, OMDb uses "XX min" #dumb
+    omdb_data = dict([(k.lower(), v) for k, v in 
+                        getOMDBData(data['imdb_id']).items() 
+                        if k.lower() not in data])
+
+    # merge data
+    data.update(omdb_data)
+    return data
+
 def json_print(json, levels=0):
     """ given some json data, print it out nicely """
+    if levels == 0:
+        print("{")
+        json_print(json, levels + 1)
+        print("}")
+        return 
+
     indent = "\t" * levels
     if type(json) is dict:
         for key, value in json.items():
@@ -57,14 +79,20 @@ def json_print(json, levels=0):
                 print(indent + "{ " + key + ": [")
                 for el in value:
                     json_print(el, levels + 1)
-                print("],")
+                print(indent + "]},")
+            elif type(value) is dict:
+                print(indent + "{ " + key + ": ")
+                json_print(value, levels + 1)
+                print(indent + "},")
             else:
                 print(indent + "{ " + key + ": " + str(value) + " },")
+
     elif type(json) is list:
         print(indent + "[")
         for obj in json:
             json_print(obj, levels + 1)
         print("],")
+
     else:
         print(json)
 
@@ -82,6 +110,10 @@ def main():
 
     json_print(row_tmdb)
     json_print(row_omdb)
+
+    print("=== start merged data ===")
+
+    json_print(getAllData(35))
 
 if __name__ == "__main__":
     main()
