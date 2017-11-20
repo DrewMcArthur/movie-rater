@@ -40,17 +40,25 @@ def getIDs(listOfDates):
 
 def getTMDBData(ID):
     """ given a movie ID, use the movie database API to retrieve data """
+    if type(ID) is list:
+        return [getTMDBData(i) for i in ID]
     uri = "https://api.themoviedb.org/3/movie/{}?api_key={}&language=en-US"
     return requests.get(uri.format(ID, TMDB_API_KEY)).json()
 
 def getOMDBData(ID):
     """ given an IMDB movie id, use the omdb api to retrieve data """
+    if type(ID) is list:
+        return [getOMDBData(i) for i in ID]
     uri = "http://www.omdbapi.com/?i={}&apikey={}"
     return requests.get(uri.format(ID, OMDB_API_KEY)).json()
 
 def getAllData(TMDBID):
     """ given a TMDb movie ID, fetch data from TMDb and OMDb and merge the data.
-    """
+        if TMDBID is a list, we return a list of the data for each ID """
+
+    if type(TMDBID) is list:
+        return [getAllData(ID) for ID in TMDBID]
+
     data = getTMDBData(TMDBID)
 
     # get the OMDb data on the movie, make all keys lowercase, and skip
@@ -72,26 +80,27 @@ def json_print(json, levels=0):
         print("}")
         return 
 
-    indent = "\t" * levels
+    indent = "  " * levels
     if type(json) is dict:
+        print(indent + "{")
         for key, value in json.items():
             if type(value) is list:
-                print(indent + "{ " + key + ": [")
+                print(indent + "  " + key + ": [")
                 for el in value:
-                    json_print(el, levels + 1)
-                print(indent + "]},")
+                    json_print(el, levels + 2)
+                print(indent + "  ],")
             elif type(value) is dict:
-                print(indent + "{ " + key + ": ")
-                json_print(value, levels + 1)
-                print(indent + "},")
+                print(indent + "  " + key + ": ")
+                json_print(value, levels + 2)
             else:
-                print(indent + "{ " + key + ": " + str(value) + " },")
+                print(indent + "  " + key + ": " + str(value) + ",")
+        print(indent + "},")
 
     elif type(json) is list:
         print(indent + "[")
         for obj in json:
             json_print(obj, levels + 1)
-        print("],")
+        print(indent + "],")
 
     else:
         print(json)
@@ -99,21 +108,19 @@ def json_print(json, levels=0):
 def main():
     dates = [(11, 17)]
 
-    #IDs = getIDs(dates)
+    IDs = getIDs(dates)[:20]
     #tmdb_data = [getTMDBData(ID) for ID in IDs]
 
-    #IMDB_IDS = [row['imdb_id'] for row in tmdb_data]
-    #omdb_data = [getOMDBData(ID) for ID in IMDB_IDS]
+    # example getting data for an individual movie
+    # row_tmdb = getTMDBData(35)
+    # row_omdb = getOMDBData(row_tmdb['imdb_id'])
 
-    row_tmdb = getTMDBData(35)
-    row_omdb = getOMDBData(row_tmdb['imdb_id'])
+    # e.g. get and print data for movie id 35
+    # json_print(getAllData(35))
 
-    json_print(row_tmdb)
-    json_print(row_omdb)
-
-    print("=== start merged data ===")
-
-    json_print(getAllData(35))
+    # e.g. get all data
+    data = getAllData(IDs)
+    json_print(data)
 
 if __name__ == "__main__":
     main()
