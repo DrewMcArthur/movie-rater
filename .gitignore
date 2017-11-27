@@ -2,6 +2,7 @@
 config.yml
 *.swp
 *.swo
+*.pkl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
