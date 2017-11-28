@@ -62,7 +62,7 @@ def getDataFromDB(ID, DB):
     # get the data, and handle missing data
     r = requests.get(uri)
     if r.status_code == 200:
-        print("Success! Retrieved movie ID {} from DB {}.".format(ID, DB))
+        # print("Success! Retrieved movie ID {} from DB {}.".format(ID, DB))
         return r.json()
     elif r.status_code == 524:
         print("{} Server timeout on ID {}, waiting and then retrying..."
@@ -88,7 +88,12 @@ def getAllData(TMDBID):
         if TMDBID is a list, we return a list of the data for each ID """
 
     if type(TMDBID) is list:
-        return [getAllData(ID) for ID in TMDBID]
+        data = []
+        for i, ID in enumerate(TMDBID):
+            data.append(getAllData(ID))
+            print("Fetched data for {0:.1f}% of movies."
+                            .format(i/(len(TMDBID)/100)), end="\r")
+        return data
 
     data = getDataFromDB(TMDBID, "TMDB")
 
@@ -164,10 +169,10 @@ def main():
     #json_print(data[:5])
 
     # e.g. download IDs from tmdb, then write list to file
-    m, d= 11, 27
-    IDs = getIDs(m, d)
-    writeToFile(IDs, "data-stores/m_IDs.pkl")
-    #IDs = readFromFile("data-stores/m_IDs.pkl")
+    #m, d= 11, 27
+    #oldIDs = getIDs(m, d)
+    #writeToFile(IDs, "data-stores/m_IDs.pkl")
+    IDs = readFromFile("data-stores/m_IDs.pkl")
 
     # then save the data we retrieved into pickle files, 
     # in groups of 1k for performance
