@@ -8,7 +8,8 @@ from sklearn.metrics import explained_variance_score, r2_score
                         # model performance metrics
 from glob import glob   # used to create list of filenames from wildcard
 import os.path          # used to check if a file exists
-import pickle           # object serialization
+import pickle           # used for object serialization
+import random           # used to split the data
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelBinarizer
@@ -84,20 +85,12 @@ def flattenListValues(data):
 def shapeData(data):
     """ takes the data loaded from file and returns training data and labels
         that can easily be processed by machine learning """
-    data, labels = zip(*[shapeDatum(row) for row in data])
-    json_print(list(data))
-    data = flattenListValues(list(data)), labels
-    print(data)
-
-"""
-    # to be added to the end of shapedata
-    # convert to list and sort the data by key
-    data = list(row.items())
-    data.sort(key=lambda item: item[0])
+    data, labels = zip(*list(filter((None.__ne__), 
+                                    [shapeDatum(row) for row in data])))
+    df = flattenListValues(list(data))
 
     # return a list of the data values and the label
-    return ([val for key, val in data], label)
-"""
+    return (df.values.tolist(), list(labels))
 
 def splitData(data, labels, ratio=0.5):
     """ splits the data into training and test sets returned in the format 
@@ -123,9 +116,13 @@ def initModel():
 def main():
     # load and process the data
     data = loadData()
-    training, labels = shapeData(data[:100])
-    exit()
-    train, test = split_data(training, labels)
+    print("Loaded", len(data), "rows of data.")
+    training, labels = shapeData(data)
+    print("Shaved data down to {} rows with {} labels."
+                .format(len(training), len(labels)))
+    train, test = splitData(training, labels)
+    print("Split data into {} training rows and {} test rows."
+                .format(len(train[0]), len(test[0])))
 
     # separate variables for different sections of data
     train_X, train_Y = train
