@@ -13,9 +13,8 @@ def filterHeaders(row):
                     'popularity', 'production_companies', 'release_date', 'dvd',
                     'released', 'genre', 'country', 'year', 'awards', 'runtime',
                     'production_countries', 'language', 'tagline', 'status', 
-                    'vote_average', 'vote_count', 'boxoffice', 'production',
-                    'metascore', 'imdbrating', 'imdbvotes', 'type', 'rated',
-                    'spoken_languages']
+                    'vote_average', 'vote_count', 'production', 'metascore', 
+                    'imdbrating', 'imdbvotes', 'type', 'rated', 'spoken_languages']
 
     # filter out useless information
     data = {key: val for key, val in row.items() 
@@ -65,6 +64,10 @@ def shapeDatum(row):
     row = filterHeaders(row)
 
     row['ratings'] = processRatings(row)
+
+    # not sure about using these numbers...
+    #row['boxoffice'] = (int(row['boxoffice'][1:].replace(",","")) 
+    #                    if row['boxoffice'] != "N/A" else None)
 
     # flatten lists found in columns that contain lists of data
     #       [{id:XX, name:XXXX},{id:YY, name:YYYY}] -> [XXXX, YYYY]
