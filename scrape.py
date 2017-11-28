@@ -6,7 +6,7 @@
         from their daily data dump
 """
 
-import urllib.request, requests, gzip, ast, yaml, pickle, time
+import urllib.request, requests, gzip, ast, yaml, pickle, time, os.path
 
 config = yaml.safe_load(open("config.yml"))
 TMDB_API_KEY = config['tmdbAPIKEY']
@@ -169,10 +169,13 @@ def main():
     #json_print(data[:5])
 
     # e.g. download IDs from tmdb, then write list to file
-    #m, d= 11, 27
-    #oldIDs = getIDs(m, d)
-    #writeToFile(IDs, "data-stores/m_IDs.pkl")
-    IDs = readFromFile("data-stores/m_IDs.pkl")
+    m, d = 11, 27
+    idFile = "data-stores/m_IDs_{}_{}.pkl".format(m, d)
+    if os.path.isfile(idFile):
+        IDs = readFromFile(idFile)
+    else:
+        IDs = getIDs(m, d)
+        writeToFile(IDs, idFile)
 
     # then save the data we retrieved into pickle files, 
     # in groups of 1k for performance
