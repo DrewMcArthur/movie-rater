@@ -140,7 +140,7 @@ def json_print(json, levels=0):
         print(indent + "],")
 
     else:
-        print(json)
+        print(indent + str(json))
 
 def writeToFile(info, filename):
     """ given some variable info that contains data to be saved,
