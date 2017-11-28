@@ -9,17 +9,20 @@ from scrape import json_print
 
 def filterHeaders(row):
     """ given a row (dict), remove unnecessary columns from data """
-    goodHeaders = [ 'adult', 'budget', 'genres', 'overview', 'title', 'ratings',
-                    'popularity', 'production_companies', 'release_date', 'dvd',
-                    'released', 'genre', 'country', 'year', 'awards', 'runtime',
-                    'production_countries', 'language', 'tagline', 'status', 
-                    'vote_average', 'vote_count', 'production', 'metascore', 
-                    'imdbrating', 'imdbvotes', 'type', 'rated', 'spoken_languages']
+    goodHeaders = [ 'adult', 'budget', 'genres', 'ratings',
+                    'popularity', 'production_companies', 
+                    'genre', 'country', 'year', 'runtime',
+                    'production_countries', 'language', 'status', 
+                    'vote_average', 'vote_count', 'production',
+                    'imdbvotes', 'type', 'rated', 'spoken_languages']
 
     # filter out useless information
     data = {key: val for key, val in row.items() 
             if key in goodHeaders}
 
+    for key in goodHeaders:
+        if key not in data:
+            return None
     return data
 
 def processDictList(dictVals):
@@ -44,8 +47,8 @@ def processRatings(row):
         based on the information found. """
     sources = {'Internet Movie Database': ('IMDb_rating', 
                                            lambda v: float(v[:-3])/10),
-            'Rotten Tomatoes': ('RT_rating', lambda v: float(v[:-1])/100), 
-            'Metacritic': ('MC_rating', lambda v: float(v[:-4])/100)}
+               'Rotten Tomatoes': ('RT_rating', lambda v: float(v[:-1])/100), 
+               'Metacritic': ('MC_rating', lambda v: float(v[:-4])/100)}
     for rating in row['ratings']:
         if rating['Source'] not in sources:
             print("Error! {} not a supported source, quitting..."
@@ -55,19 +58,28 @@ def processRatings(row):
             row[sources[rating['Source']][0]] = \
                 sources[rating['Source']][1](rating['Value'])
     del row['ratings']
+    return row
 
 def shapeDatum(row):
     """ given one row of data, return: (list of input data, label) """
     label = row['revenue']
+    if label == 0:
+        return None
 
     # remove unwanted columns
     row = filterHeaders(row)
 
-    row['ratings'] = processRatings(row)
+    if row == None:
+        return None
+
+    row = processRatings(row)
+    if row['rated'] == "NOT RATED" or row['rated'] == "N/A":
+        row['rated'] = None
 
     # not sure about using these numbers...
     #row['boxoffice'] = (int(row['boxoffice'][1:].replace(",","")) 
-    #                    if row['boxoffice'] != "N/A" else None)
+    #                    if row['boxoffice'] != "N/A" and row['boxoffice'] != 0 
+    #                    else None)
 
     # flatten lists found in columns that contain lists of data
     #       [{id:XX, name:XXXX},{id:YY, name:YYYY}] -> [XXXX, YYYY]
