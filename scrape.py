@@ -69,6 +69,10 @@ def getDataFromDB(ID, DB):
                     .format(DB, ID))
         time.sleep(1)
         return getDataFromDB(ID, DB)
+    elif r.status_code == 401:
+        print("{} Server auth error on ID {}, skipping...".format(DB, ID))
+        return {"ID": ID, "error code": r.status_code, "database": DB,
+                "comment": "Error retrieving data."}
     else:
         # if there's an error,
         res = input("Err retrieving movie {} from {}, status code: {}. Retry? "
@@ -180,9 +184,11 @@ def main():
     # then save the data we retrieved into pickle files, 
     # in groups of 1k for performance
     for i in range(len(IDs) // 1000):
-        print("retrieveing and writing data at piece:", i)
-        data = getAllData(IDs[i*1000:(i+1)*1000])
-        writeToFile(data, "data-stores/m_data_{}.pkl".format(i))
+        fn = "data-stores/m_data_{}.pkl".format(i)
+        if not os.path.isfile(fn):
+            print("retrieving and writing data at piece:", i)
+            data = getAllData(IDs[i*1000:(i+1)*1000])
+            writeToFile(data, fn)
 
 if __name__ == "__main__":
     main()
