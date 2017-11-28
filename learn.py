@@ -9,6 +9,11 @@ from sklearn.metrics import explained_variance_score, r2_score
 from glob import glob   # used to create list of filenames from wildcard
 import os.path          # used to check if a file exists
 import pickle           # object serialization
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelBinarizer
+
+# local imports
 from scrape import json_print
 from clean_data import shapeDatum
 
@@ -29,11 +34,70 @@ def loadData(*sections):
 
     return data
 
+def flattenListValues(data):
+    # turn columns with list values into multiple binary columns
+    # answered here: https://stackoverflow.com/a/47535706/3972042
+    df = pd.DataFrame(data)
+
+    # genres
+    # explode the list to separate rows
+    X = pd.concat(
+            [pd.DataFrame(v, index=np.repeat(k,len(v)), columns=['genre']) 
+                                    for k,v in df.genre.to_dict().items()])
+    lb = LabelBinarizer()
+    dd = pd.DataFrame(lb.fit_transform(X), index=X.index, columns=lb.classes_)
+    del df['genre']
+    df = pd.concat([df, dd.groupby(dd.index).max()], axis=1)
+
+    # languages
+    # explode the list to separate rows
+    X = pd.concat(
+            [pd.DataFrame(v, index=np.repeat(k,len(v)), columns=['language']) 
+                                    for k,v in df.language.to_dict().items()])
+    lb = LabelBinarizer()
+    dd = pd.DataFrame(lb.fit_transform(X), index=X.index, columns=lb.classes_)
+    del df['language']
+    df = pd.concat([df, dd.groupby(dd.index).max()], axis=1)
+
+    # production
+    # explode the list to separate rows
+    X = pd.concat(
+            [pd.DataFrame(v, index=np.repeat(k,len(v)), columns=['production']) 
+                                    for k,v in df.production.to_dict().items()])
+    lb = LabelBinarizer()
+    dd = pd.DataFrame(lb.fit_transform(X), index=X.index, columns=lb.classes_)
+    del df['production']
+    df = pd.concat([df, dd.groupby(dd.index).max()], axis=1)
+
+    # countries
+    # explode the list to separate rows
+    X = pd.concat(
+            [pd.DataFrame(v, index=np.repeat(k,len(v)), columns=['country']) 
+                                    for k,v in df.country.to_dict().items()])
+    lb = LabelBinarizer()
+    dd = pd.DataFrame(lb.fit_transform(X), index=X.index, columns=lb.classes_)
+    del df['country']
+    df = pd.concat([df, dd.groupby(dd.index).max()], axis=1)
+
+    return df
+
 def shapeData(data):
     """ takes the data loaded from file and returns training data and labels
         that can easily be processed by machine learning """
-    [json_print(x) for x in data[:3]]
-    return [shapeDatum(row) for row in data]
+    data, labels = zip(*[shapeDatum(row) for row in data])
+    json_print(list(data))
+    data = flattenListValues(list(data)), labels
+    print(data)
+
+"""
+    # to be added to the end of shapedata
+    # convert to list and sort the data by key
+    data = list(row.items())
+    data.sort(key=lambda item: item[0])
+
+    # return a list of the data values and the label
+    return ([val for key, val in data], label)
+"""
 
 def splitData(data, labels, ratio=0.5):
     """ splits the data into training and test sets returned in the format 
@@ -59,7 +123,7 @@ def initModel():
 def main():
     # load and process the data
     data = loadData()
-    training, labels = shapeData(data)
+    training, labels = shapeData(data[:100])
     exit()
     train, test = split_data(training, labels)
 

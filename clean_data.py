@@ -14,7 +14,8 @@ def filterHeaders(row):
                     'released', 'genre', 'country', 'year', 'awards', 'runtime',
                     'production_countries', 'language', 'tagline', 'status', 
                     'vote_average', 'vote_count', 'boxoffice', 'production',
-                    'metascore', 'imdbrating', 'imdbvotes', 'type', 'rated' ]
+                    'metascore', 'imdbrating', 'imdbvotes', 'type', 'rated',
+                    'spoken_languages']
 
     # filter out useless information
     data = {key: val for key, val in row.items() 
@@ -22,11 +23,22 @@ def filterHeaders(row):
 
     return data
 
-def processIDList(listVals):
-    """ given a list of values of a col for a movie, return a list of the values
+def processDictList(dictVals):
+    """ given dicts of values of a col for a movie, return a list of the values
         input format: [{'id': XX, 'name': NAME}]
     """
-    return [x['name'] for x in listVals]
+    return [x['name'] for x in dictVals]
+
+def consolidateCols(row, h1, h2):
+    """ given a row and two headers, return the merged value of the two columns
+    """
+    if type(row[h1]) != list:
+        row[h1] = row[h1].split(", ")
+    if type(row[h2]) != list:
+        row[h2] = row[h2].split(", ")
+
+    row[h1] = list(set(row[h1] + row[h2]))
+    del row[h2]
 
 def processRatings(row):
     """ given a row, process data in the ratings column and create new columns 
@@ -43,7 +55,7 @@ def processRatings(row):
         else:
             row[sources[rating['Source']][0]] = \
                 sources[rating['Source']][1](rating['Value'])
-    row.pop('ratings', None)
+    del row['ratings']
 
 def shapeDatum(row):
     """ given one row of data, return: (list of input data, label) """
@@ -52,26 +64,22 @@ def shapeDatum(row):
     # remove unwanted columns
     row = filterHeaders(row)
 
+    row['ratings'] = processRatings(row)
 
     # flatten lists found in columns that contain lists of data
     #       [{id:XX, name:XXXX},{id:YY, name:YYYY}] -> [XXXX, YYYY]
     listCols = ['genres', 'production_companies', 'production_countries', 
                 'spoken_languages']
     for col in listCols:
-        row[col] = processIDList(row[col])
+        row[col] = processDictList(row[col])
 
-    row['ratings'] = processRatings(row)
+    # merge columns that contain the same information
+    dupCols = [('production', 'production_companies'), 
+               ('genre', 'genres'), 
+               ('country', 'production_countries'), 
+               ('language', 'spoken_languages')]
+    for col, col2 in dupCols:
+        consolidateCols(row, col, col2)
 
-    if ", ".join(row['spoken_languages']) != row['language']:
-        print("DOESN'T MATCH:", row['title'])
-        print(row['spoken_languages'])
-        print("           == " + row['language'])
-
-    data = list(row.items())
-
-    # sort the data by key
-    data.sort(key=lambda item: item[0])
-
-    # return a list of the data values and the label
-    return ([val for key, val in data], label)
+    return row, label
 
