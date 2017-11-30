@@ -22,7 +22,8 @@ def filterHeaders(row):
 
     for key in goodHeaders:
         if key not in data:
-            return None
+            data.update({"Err": "Missing header: {}".format(key)})
+            return data
     return data
 
 def processDictList(dictVals):
@@ -64,13 +65,14 @@ def shapeDatum(row):
     """ given one row of data, return: (list of input data, label) """
     label = row['revenue']
     if label == 0:
-        return None
+        row.update({"Err": "NOLABEL"})
+        return (row, -1)
 
     # remove unwanted columns
     row = filterHeaders(row)
 
-    if row == None:
-        return None
+    if "Err" in row:
+        return (row, label)
 
     row = processRatings(row)
     if row['rated'] == "NOT RATED" or row['rated'] == "N/A":

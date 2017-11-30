@@ -85,8 +85,12 @@ def flattenListValues(data):
 def shapeData(data):
     """ takes the data loaded from file and returns training data and labels
         that can easily be processed by machine learning """
-    data, labels = zip(*list(filter((None.__ne__), 
-                                    [shapeDatum(row) for row in data])))
+
+    shapedData = [shapeDatum(row) for row in data]
+    removed = [x[0] for x in shapedData if "Err" in x[0]]
+    print("shapeDatum removed {} rows of data.".format(len(removed)))
+    data, labels = zip(*[row for row in shapedData if "Err" not in row[0]])
+                            
     df = flattenListValues(list(data))
 
     # return a list of the data values and the label
@@ -111,7 +115,10 @@ def splitData(data, labels, ratio=0.5):
 
 def initModel():
     """ uses sklearn pipeline to initialize an AI model """
-    pass
+
+    # not yet implemented, quit here.
+    print("Err: initModel: Implement a learning model to continue.")
+    exit()
 
 def main():
     # load and process the data
