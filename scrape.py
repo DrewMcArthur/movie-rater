@@ -6,7 +6,7 @@
         from their daily data dump
 """
 
-import urllib.request, requests, gzip, ast, yaml, pickle, time
+import urllib.request, requests, gzip, ast, yaml, pickle, time, os.path
 
 config = yaml.safe_load(open("config.yml"))
 TMDB_API_KEY = config['tmdbAPIKEY']
@@ -62,13 +62,17 @@ def getDataFromDB(ID, DB):
     # get the data, and handle missing data
     r = requests.get(uri)
     if r.status_code == 200:
-        print("Success! Retrieved movie ID {} from DB {}.".format(ID, DB))
+        # print("Success! Retrieved movie ID {} from DB {}.".format(ID, DB))
         return r.json()
     elif r.status_code == 524:
         print("{} Server timeout on ID {}, waiting and then retrying..."
                     .format(DB, ID))
         time.sleep(1)
         return getDataFromDB(ID, DB)
+    elif r.status_code == 401:
+        print("{} Server auth error on ID {}, skipping...".format(DB, ID))
+        return {"ID": ID, "error code": r.status_code, "database": DB,
+                "comment": "Error retrieving data."}
     else:
         # if there's an error,
         res = input("Err retrieving movie {} from {}, status code: {}. Retry? "
@@ -88,7 +92,12 @@ def getAllData(TMDBID):
         if TMDBID is a list, we return a list of the data for each ID """
 
     if type(TMDBID) is list:
-        return [getAllData(ID) for ID in TMDBID]
+        data = []
+        for i, ID in enumerate(TMDBID):
+            data.append(getAllData(ID))
+            print("Fetched data for {0:.1f}% of movies."
+                            .format(i/(len(TMDBID)/100)), end="\r")
+        return data
 
     data = getDataFromDB(TMDBID, "TMDB")
 
@@ -135,7 +144,7 @@ def json_print(json, levels=0):
         print(indent + "],")
 
     else:
-        print(json)
+        print(indent + str(json))
 
 def writeToFile(info, filename):
     """ given some variable info that contains data to be saved,
@@ -164,17 +173,22 @@ def main():
     #json_print(data[:5])
 
     # e.g. download IDs from tmdb, then write list to file
-    m, d= 11, 27
-    IDs = getIDs(m, d)
-    writeToFile(IDs, "data-stores/m_IDs.pkl")
-    #IDs = readFromFile("data-stores/m_IDs.pkl")
+    m, d = 11, 27
+    idFile = "data-stores/m_IDs_{}_{}.pkl".format(m, d)
+    if os.path.isfile(idFile):
+        IDs = readFromFile(idFile)
+    else:
+        IDs = getIDs(m, d)
+        writeToFile(IDs, idFile)
 
     # then save the data we retrieved into pickle files, 
     # in groups of 1k for performance
     for i in range(len(IDs) // 1000):
-        print("retrieveing and writing data at piece:", i)
-        data = getAllData(IDs[i*1000:(i+1)*1000])
-        writeToFile(data, "data-stores/m_data_{}.pkl".format(i))
+        fn = "data-stores/m_data_{}.pkl".format(i)
+        if not os.path.isfile(fn):
+            print("retrieving and writing data at piece:", i)
+            data = getAllData(IDs[i*1000:(i+1)*1000])
+            writeToFile(data, fn)
 
 if __name__ == "__main__":
     main()
