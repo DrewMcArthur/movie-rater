@@ -4,6 +4,10 @@
     defines functions that train a model based on 
     movie data collected in scrape.py
 """
+from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.preprocessing import LabelBinarizer, Imputer, MinMaxScaler
+from sklearn.neural_network import MLPRegressor
+from CategoricalEncoder import CategoricalEncoder
 from sklearn.metrics import explained_variance_score, r2_score
                         # model performance metrics
 from glob import glob   # used to create list of filenames from wildcard
@@ -12,7 +16,6 @@ import pickle           # used for object serialization
 import random           # used to split the data
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelBinarizer
 
 # local imports
 from scrape import json_print
@@ -116,9 +119,19 @@ def splitData(data, labels, ratio=0.5):
 def initModel():
     """ uses sklearn pipeline to initialize an AI model """
 
+    pipe_items = []
+
+    cat_indices = [7, 9, 12]
+    pipe_items.append(CategoricalEncoder(cat_indices))
+    pipe_items.append(Imputer())
+    pipe_items.append(MinMaxScaler())
+    pipe_items.append(MLPRegressor(hidden_layer_sizes=(1000, 100, 10), activation='tanh', max_iter=5000))
+
     # not yet implemented, quit here.
-    print("Err: initModel: Implement a learning model to continue.")
-    exit()
+    #print("Err: initModel: Implement a learning model to continue.")
+    #exit()
+
+    return make_pipeline(*pipe_items)
 
 def main():
     # load and process the data
@@ -127,7 +140,14 @@ def main():
     training, labels = shapeData(data)
     print("Shaved data down to {} rows with {} labels."
                 .format(len(training), len(labels)))
-    train, test = splitData(training, labels)
+
+    """
+    labels = np.array(labels).reshape(-1, 1)
+    mmscaler = MinMaxScaler()
+    labels = [l[0]*100 for l in mmscaler.fit_transform(labels)]
+    """
+
+    train, test = splitData(training, labels, .75)
     print("Split data into {} training rows and {} test rows."
                 .format(len(train[0]), len(test[0])))
 
@@ -135,6 +155,7 @@ def main():
     train_X, train_Y = train
     test_X, test_Y = test
 
+    print(len(train_X), "by", len(train_X[0]))
 
     # create and train the model
     model = initModel()
@@ -144,8 +165,8 @@ def main():
     pred_Y = model.predict(test_X)
     deltas = [abs(p-l) for p, l in zip(pred_Y, test_Y)]
     print("     avg delta:  ", sum(deltas)/len(deltas))
-    print("variance score:  ", explained_variance_score(y_test, y_pred))
-    print("     r squared:  ", r2_score(y_test, y_pred))
+    print("variance score:  ", explained_variance_score(test_Y, pred_Y))
+    print("     r squared:  ", r2_score(test_Y, pred_Y))
 
 
 if __name__ == "__main__":
