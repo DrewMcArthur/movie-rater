@@ -77,10 +77,18 @@ def shapeDatum(row):
     if "Err" in row:
         return (row, label)
 
-    row = processRatings(row)
-    if row['rated'] == "NOT RATED" or row['rated'] == "N/A":
-        row['rated'] = None
+    row['adult'] = 1 if row['adult'] else 0
 
+    # ratings, i.e. critical reviews
+    row = processRatings(row)
+
+    # rated, i.e. appropriate for what age level
+    # if row['rated'] == "NOT RATED" or row['rated'] == "N/A":
+        #row['rated'] = None
+
+
+    row['imdbvotes'] = (int(row['imdbvotes'].replace(",",""))
+                        if row['imdbvotes'].upper() != "N/A" else None)
     # not sure about using these numbers...
     #row['boxoffice'] = (int(row['boxoffice'][1:].replace(",","")) 
     #                    if row['boxoffice'] != "N/A" and row['boxoffice'] != 0 
