@@ -12,9 +12,12 @@ def filterHeaders(row):
     goodHeaders = [ 'adult', 'budget', 'genres', 'ratings',
                     'popularity', 'production_companies', 
                     'genre', 'country', 'year', 'runtime',
-                    'production_countries', 'language', 'status', 
+                    'production_countries', 'language',
                     'vote_average', 'vote_count', 'production',
                     'imdbvotes', 'type', 'rated', 'spoken_languages']
+
+    if row['status'] != "Released":
+        print("Weird, this movie's status is", row['status'])
 
     # filter out useless information
     data = {key: val for key, val in row.items() 
