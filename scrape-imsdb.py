@@ -55,7 +55,6 @@ def getLinks(address):
 
 def getScripts(links):
     link = links[0]
-    print("http://www.imsdb.com/scripts/" + link)
     page = requests.get("http://www.imsdb.com/scripts/" + link)
     scripts = []
 
@@ -85,7 +84,6 @@ def main():
     print("got scripts")
     if (len(scripts) == len(links)):
         print("TRUE")
-        print(type(scripts[0]))
     for i in range(len(links)):
         openfile = open("scripts/" + links[i], "w")
         openfile.write(scripts[i])
