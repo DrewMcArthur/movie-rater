@@ -3,6 +3,10 @@
 
     defines functions that train a model based on 
     movie data collected in scrape.py
+
+    TODO: visualize which features are important, 
+                    which neurons fire on what input,
+          cross-validation on training
 """
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import LabelBinarizer, Imputer, MinMaxScaler
@@ -125,7 +129,7 @@ def initModel():
     pipe_items.append(CategoricalEncoder(cat_indices))
     pipe_items.append(Imputer())
     pipe_items.append(MinMaxScaler())
-    pipe_items.append(MLPRegressor(hidden_layer_sizes=(1000, 100, 10), activation='tanh', max_iter=5000))
+    pipe_items.append(MLPRegressor(hidden_layer_sizes=(1000, 100, 10), activation='tanh', max_iter=2500))
 
     # not yet implemented, quit here.
     #print("Err: initModel: Implement a learning model to continue.")
@@ -141,11 +145,11 @@ def main():
     print("Shaved data down to {} rows with {} labels."
                 .format(len(training), len(labels)))
 
-    """
     labels = np.array(labels).reshape(-1, 1)
     mmscaler = MinMaxScaler()
     labels = [l[0]*100 for l in mmscaler.fit_transform(labels)]
-    """
+
+    # TODO use mmscaler.inverse_transform to compare to test labels
 
     train, test = splitData(training, labels, .75)
     print("Split data into {} training rows and {} test rows."
