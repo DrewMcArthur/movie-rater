@@ -23,7 +23,7 @@ import pandas as pd
 import numpy as np
 
 # local imports
-from scrape import json_print
+from scrape import json_print, writeToFile
 from clean_data import shapeDatum
 
 def loadData(*sections):
@@ -100,6 +100,7 @@ def shapeData(data):
     data, labels = zip(*[row for row in shapedData if "Err" not in row[0]])
                             
     df = flattenListValues(list(data))
+    writeToFile((df, list(labels)), "cleanedData.pkl")
 
     # return a list of the data values and the label
     return (df.values.tolist(), list(labels))
@@ -121,6 +122,19 @@ def splitData(data, labels, ratio=0.5):
 
     return ( (data, labels), (test, testlabels) )
 
+def crossValTrain(data, labels, nFolds, model):
+    """ 
+        split the data and labels into n groups, and train the model on 
+        all but one of the groups, and return the accuracy for each round
+    """
+    # split the data into n groups
+
+    # for group in groups:
+    #   model.train(allothergroups)
+    #   model.test(group)
+    #   results.append(model.accuracy)
+    # return results
+
 def initModel():
     """ uses sklearn pipeline to initialize an AI model """
     cat_indices = [7, 9, 12]
@@ -129,14 +143,14 @@ def initModel():
             [("ce", CategoricalEncoder(cat_indices)),
              ("imp", Imputer()),
              ("mmscaler", MinMaxScaler()),
-             ("nn", MLPRegressor(hidden_layer_sizes=(1000, 100, 10), 
+             #("nn", MLPRegressor(hidden_layer_sizes=(1000, 100, 10), 
+             ("nn", MLPRegressor(hidden_layer_sizes=(), 
                                  activation='tanh', max_iter=2500))])
 
-def visualizeModel(M):
-    """ given a model M, visualize the neural network and how it predicts.
-        note: M is assumed to be a pipeline containing a named step "nn"
-    """
-    pass
+
+def saveModel(model, filename):
+    with open(filename, 'wb') as handle:
+        pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def main():
     # load and process the data
@@ -176,7 +190,7 @@ def main():
     print("variance score:  ", explained_variance_score(test_Y, pred_Y))
     print("     r squared:  ", r2_score(test_Y, pred_Y))
 
-    visualizeModel(model)
+    saveModel(model, "model.pkl")
 
 if __name__ == "__main__":
     main()
