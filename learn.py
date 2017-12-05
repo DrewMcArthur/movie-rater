@@ -11,6 +11,7 @@
 from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import LabelBinarizer, Imputer, MinMaxScaler
 from sklearn.neural_network import MLPRegressor
+from sklearn.model_selection import KFold
 from CategoricalEncoder import CategoricalEncoder
 from sklearn.metrics import explained_variance_score, r2_score
                         # model performance metrics
@@ -151,6 +152,9 @@ def main():
 
     # TODO use mmscaler.inverse_transform to compare to test labels
 
+    # TODO replace this split data with kfold
+    #   kf = KFold(n_folds=10)
+    #   train, test = kf.split(training, labels)
     train, test = splitData(training, labels, .75)
     print("Split data into {} training rows and {} test rows."
                 .format(len(train[0]), len(test[0])))
