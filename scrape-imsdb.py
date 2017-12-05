@@ -9,6 +9,8 @@ import regex as re
 import requests
 
 def getLinks(address):
+    """ gets all the links from the table on the "all scripts"
+    page on imsdb """
     page = requests.get(address)
     soup = BeautifulSoup(page.content, 'html.parser')
 
@@ -34,12 +36,16 @@ def getLinks(address):
     # #delete after debugging
     # return links
 
+    # use a try-except to make sure if we go out of range we jsut leave
     try:
         for i in range(3,len(table)):
             """ extract each link in the table, and clean it up for usage"""
             string = str(list(table[i].children)[0])
+            # get to line in the table that the title is in
             string = re.findall("\"(.+?)\"", string)[0]
+            # find the title in that line of html
             string = string.split("/")
+            # clean up the title to make it a usable link
             string = string[2].split(" ")
             string, end = string[:-1], string[-1]
             end = end.split(".")[-1]
@@ -48,12 +54,14 @@ def getLinks(address):
             end = ".".join(end)
             string.append(end)
             string = "-".join(string)
+            # add the now usable link to links
             links.append(string)
         return links
     except:
         return links
 
 def getScripts(links):
+    """ the script from each script page of imsdb """
     link = links[0]
     page = requests.get("http://www.imsdb.com/scripts/" + link)
     scripts = []
@@ -67,9 +75,13 @@ def getScripts(links):
 
 
     for i in range(len(links)):
+        # convert page into BeautifulSoup Object
         soup = BeautifulSoup(page.content, 'html.parser')
+        # get the html table body from the soup
         html = soup.find(class_ = 'scrtext')
+        # get the script from the table
         script = html.select('pre')[0]
+        # get the text from the soup object
         script = script.get_text()
         scripts.append(script)
 
@@ -78,14 +90,21 @@ def getScripts(links):
 
 def main():
     address = "http://www.imsdb.com/all%20scripts/"
+    titles = []
     links = getLinks(address)
     print("got links")
+    print(len(links))
     scripts = getScripts(links)
+    print(len(scripts))
     print("got scripts")
-    if (len(scripts) == len(links)):
-        print("TRUE")
+    # if (len(scripts) == len(links)):
+    #     print("TRUE")
     for i in range(len(links)):
-        openfile = open("scripts/" + links[i], "w")
+        try:
+            titles.append(links[i].split(".")[0])
+        except:
+            titles.append(links[i])
+        openfile = open("scripts/" + titles[i], "w")
         openfile.write(scripts[i])
 
 if __name__ == "__main__":
