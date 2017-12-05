@@ -8,7 +8,7 @@
                     which neurons fire on what input,
           cross-validation on training
 """
-from sklearn.pipeline import Pipeline, make_pipeline
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelBinarizer, Imputer, MinMaxScaler
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import KFold
@@ -123,20 +123,20 @@ def splitData(data, labels, ratio=0.5):
 
 def initModel():
     """ uses sklearn pipeline to initialize an AI model """
-
-    pipe_items = []
-
     cat_indices = [7, 9, 12]
-    pipe_items.append(CategoricalEncoder(cat_indices))
-    pipe_items.append(Imputer())
-    pipe_items.append(MinMaxScaler())
-    pipe_items.append(MLPRegressor(hidden_layer_sizes=(1000, 100, 10), activation='tanh', max_iter=2500))
 
-    # not yet implemented, quit here.
-    #print("Err: initModel: Implement a learning model to continue.")
-    #exit()
+    return Pipeline(steps=
+            [("ce", CategoricalEncoder(cat_indices)),
+             ("imp", Imputer()),
+             ("mmscaler", MinMaxScaler()),
+             ("nn", MLPRegressor(hidden_layer_sizes=(1000, 100, 10), 
+                                 activation='tanh', max_iter=2500))])
 
-    return make_pipeline(*pipe_items)
+def visualizeModel(M):
+    """ given a model M, visualize the neural network and how it predicts.
+        note: M is assumed to be a pipeline containing a named step "nn"
+    """
+    pass
 
 def main():
     # load and process the data
@@ -176,6 +176,7 @@ def main():
     print("variance score:  ", explained_variance_score(test_Y, pred_Y))
     print("     r squared:  ", r2_score(test_Y, pred_Y))
 
+    visualizeModel(model)
 
 if __name__ == "__main__":
     main()
