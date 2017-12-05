@@ -7,6 +7,7 @@
 import pickle
 from os.path import isfile
 from learn import loadData
+import numpy as np
 
 import matplotlib.pyplot as plt
 
