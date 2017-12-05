@@ -28,8 +28,9 @@ def visualize(M):
     print(len(nn.coefs_[0]))
     #[print(col) for col in zip(training.columns.values, nn.coefs_[0])]
 
-    headerweights = zip(training.columns.values, nn.coefs_[0])
-    [print(col) for col in sorted(headerweights, key=lambda row:row[1][0])]
+    coefficients = [x[0] for x in nn.coefs_[0]]
+    headerweights = zip(training.columns.values, coefficients)
+    [print(col) for col in sorted(headerweights, key=lambda row:row[1])]
 
 def main():
     model = load("model.pkl")
