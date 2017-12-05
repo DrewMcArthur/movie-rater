@@ -50,7 +50,7 @@ def visualize(M):
 
 
     plt.scatter(pca_data[:,0], pca_data[:,1])
-    plt.pcolormesh(vmin=0., vmax=1., cmap='RdBu_r')
+    #plt.pcolormesh(vmin=0., vmax=1., cmap='RdBu_r')
     plt.suptitle("PCA")
     plt.xlabel("PC1")
     plt.ylabel("PC2")
