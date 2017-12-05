@@ -29,7 +29,7 @@ def visualize(M):
     nn = M.named_steps['nn']
 
     # training is a panda df
-    training, label = load("cleanedData.pkl")
+    training, labels = load("cleanedData.pkl")
     #print(training)
 
     ce = CategoricalEncoder([7,9,12]) 
@@ -46,7 +46,7 @@ def visualize(M):
 
     normalized_labels = np.array(labels).reshape(-1, 1)
     mmscaler = MinMaxScaler()
-    normalize_labels = [l[0] for l in mmscaler.fit_transform(labels)]
+    normalize_labels = [l[0] for l in mmscaler.fit_transform(normalized_labels)]
 
 
     plt.scatter(pca_data[:,0], pca_data[:,1])
