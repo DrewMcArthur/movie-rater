@@ -10,6 +10,7 @@
 """
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelBinarizer, Imputer, MinMaxScaler
+from sklearn.decomposition import PCA
 from sklearn.neural_network import MLPRegressor
 from sklearn.model_selection import KFold
 from CategoricalEncoder import CategoricalEncoder
@@ -135,7 +136,7 @@ def crossValTrain(data, labels, nFolds, model):
     #   results.append(model.accuracy)
     # return results
 
-def initModel(L):
+def initModel(L, F, R):
     """ uses sklearn pipeline to initialize an AI model """
     cat_indices = [7, 9, 12]
 
@@ -143,9 +144,10 @@ def initModel(L):
             [("ce", CategoricalEncoder(cat_indices)),
              ("imp", Imputer()),
              ("mmscaler", MinMaxScaler()),
-             #("nn", MLPRegressor(hidden_layer_sizes=(1000, 100, 10), 
-             ("nn", MLPRegressor(hidden_layer_sizes=L, 
-                                 activation='tanh', max_iter=2500))])
+             ("pca", PCA()),
+             ("nn", MLPRegressor(hidden_layer_sizes=L, max_iter=2500))])
+             #("nn", MLPRegressor(hidden_layer_sizes=L, learning_rate=R,
+             #                   activation=F, max_iter=2500))])
 
 
 def saveModel(model, filename):
@@ -153,28 +155,28 @@ def saveModel(model, filename):
         pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def main():
-    if os.path.isfile("cleanData123.pkl"):
-        training, labels = readFromFile("cleanData.pkl")
-    else:
-        # load and process the data
-        data = loadData()
-        print("Loaded", len(data), "rows of data.")
-        training, labels = shapeData(data)
-        print("Shaved data down to {} rows with {} labels."
-                    .format(len(training), len(labels)))
+    # load and process the data
+    data = loadData()
+    print("Loaded", len(data), "rows of data.")
+    training, labels = shapeData(data)
+    print("Shaved data down to {} rows with {} labels."
+                .format(len(training), len(labels)))
 
-        labels = np.array(labels).reshape(-1, 1)
-        mmscaler = MinMaxScaler()
-        labels = [l[0] for l in mmscaler.fit_transform(labels)]
+    labels = np.array(labels).reshape(-1, 1)
+    mmscaler = MinMaxScaler()
+    labels = [l[0] for l in mmscaler.fit_transform(labels)]
 
-        writeToFile((training, labels), "cleanData.pkl")
+    #writeToFile((training, labels), "cleanData.pkl")
 
     # TODO use mmscaler.inverse_transform to compare to test labels
 
     # TODO replace this split data with kfold
     #   kf = KFold(n_folds=10)
     #   train, test = kf.split(training, labels)
-    train, test = splitData(training, labels, .75)
+
+    #training = training[:,:1000]
+
+    train, test = splitData(training, labels, .9)
     print("Split data into {} training rows and {} test rows."
                 .format(len(train[0]), len(test[0])))
 
@@ -184,21 +186,21 @@ def main():
 
     print(len(train_X), "by", len(train_X[0]))
 
-    for h in range(1, 4000, 75):
-        for i in range(40, 63, 3):
-            # create and train the model
-            model = initModel((h, i))
-            model.fit(train_X, train_Y)
+    for f in range(40, 60):
+        # create and train the model
+        model = initModel((f), 'logistic', 'adaptive')
+        model.fit(train_X, train_Y)
 
-            # test the model and report accuracy
-            pred_Y = model.predict(test_X)
-            deltas = [abs(p-l) for p, l in zip(pred_Y, test_Y)]
-            print(" hidden layers:  (" + str(h) + ", " + str(i) + ")")
-            print("     avg delta:  ", sum(deltas)/len(deltas))
-            print("variance score:  ", explained_variance_score(test_Y, pred_Y))
-            print("     r squared:  ", r2_score(test_Y, pred_Y))
+        # test the model and report accuracy
+        pred_Y = model.predict(test_X)
+        deltas = [abs(p-l) for p, l in zip(pred_Y, test_Y)]
+        #print(" hidden layers:  (" + str(h) + ", " + str(i) + ")")
+        print("len(hidden layer):  ", f)
+        print("        avg delta:  ", sum(deltas)/len(deltas))
+        #print("variance score:  ", explained_variance_score(test_Y, pred_Y))
+        #print("     r squared:  ", r2_score(test_Y, pred_Y))
 
-    #saveModel(model, "model.pkl")
+        #saveModel(model, "model.pkl")
 
 if __name__ == "__main__":
     main()
