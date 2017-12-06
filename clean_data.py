@@ -67,8 +67,8 @@ def processRatings(row):
 def shapeDatum(row):
     """ given one row of data, return: (list of input data, label) """
     label = row['revenue']
-    if label == 0:
-        row.update({"Err": "NOLABEL"})
+    if label < 5000:
+        row.update({"Err": "BADLABEL"})
         return (row, -1)
 
     # remove unwanted columns
@@ -86,13 +86,14 @@ def shapeDatum(row):
     # if row['rated'] == "NOT RATED" or row['rated'] == "N/A":
         #row['rated'] = None
 
-
     row['imdbvotes'] = (int(row['imdbvotes'].replace(",",""))
                         if row['imdbvotes'].upper() != "N/A" else None)
     # not sure about using these numbers...
     #row['boxoffice'] = (int(row['boxoffice'][1:].replace(",","")) 
     #                    if row['boxoffice'] != "N/A" and row['boxoffice'] != 0 
     #                    else None)
+
+    row['year'] = row['year'][:3] + "0"
 
     # flatten lists found in columns that contain lists of data
     #       [{id:XX, name:XXXX},{id:YY, name:YYYY}] -> [XXXX, YYYY]
@@ -110,4 +111,3 @@ def shapeDatum(row):
         consolidateCols(row, col, col2)
 
     return row, label
-

@@ -23,7 +23,7 @@ import pandas as pd
 import numpy as np
 
 # local imports
-from scrape import json_print, writeToFile
+from scrape import json_print, writeToFile, readFromFile
 from clean_data import shapeDatum
 
 def loadData(*sections):
@@ -135,7 +135,7 @@ def crossValTrain(data, labels, nFolds, model):
     #   results.append(model.accuracy)
     # return results
 
-def initModel():
+def initModel(L):
     """ uses sklearn pipeline to initialize an AI model """
     cat_indices = [7, 9, 12]
 
@@ -144,7 +144,7 @@ def initModel():
              ("imp", Imputer()),
              ("mmscaler", MinMaxScaler()),
              #("nn", MLPRegressor(hidden_layer_sizes=(1000, 100, 10), 
-             ("nn", MLPRegressor(hidden_layer_sizes=(), 
+             ("nn", MLPRegressor(hidden_layer_sizes=L, 
                                  activation='tanh', max_iter=2500))])
 
 
@@ -153,16 +153,21 @@ def saveModel(model, filename):
         pickle.dump(model, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 def main():
-    # load and process the data
-    data = loadData()
-    print("Loaded", len(data), "rows of data.")
-    training, labels = shapeData(data)
-    print("Shaved data down to {} rows with {} labels."
-                .format(len(training), len(labels)))
+    if os.path.isfile("cleanData123.pkl"):
+        training, labels = readFromFile("cleanData.pkl")
+    else:
+        # load and process the data
+        data = loadData()
+        print("Loaded", len(data), "rows of data.")
+        training, labels = shapeData(data)
+        print("Shaved data down to {} rows with {} labels."
+                    .format(len(training), len(labels)))
 
-    labels = np.array(labels).reshape(-1, 1)
-    mmscaler = MinMaxScaler()
-    labels = [l[0]*100 for l in mmscaler.fit_transform(labels)]
+        labels = np.array(labels).reshape(-1, 1)
+        mmscaler = MinMaxScaler()
+        labels = [l[0] for l in mmscaler.fit_transform(labels)]
+
+        writeToFile((training, labels), "cleanData.pkl")
 
     # TODO use mmscaler.inverse_transform to compare to test labels
 
@@ -179,18 +184,21 @@ def main():
 
     print(len(train_X), "by", len(train_X[0]))
 
-    # create and train the model
-    model = initModel()
-    model.fit(train_X, train_Y)
+    for h in range(1, 4000, 75):
+        for i in range(40, 63, 3):
+            # create and train the model
+            model = initModel((h, i))
+            model.fit(train_X, train_Y)
 
-    # test the model and report accuracy
-    pred_Y = model.predict(test_X)
-    deltas = [abs(p-l) for p, l in zip(pred_Y, test_Y)]
-    print("     avg delta:  ", sum(deltas)/len(deltas))
-    print("variance score:  ", explained_variance_score(test_Y, pred_Y))
-    print("     r squared:  ", r2_score(test_Y, pred_Y))
+            # test the model and report accuracy
+            pred_Y = model.predict(test_X)
+            deltas = [abs(p-l) for p, l in zip(pred_Y, test_Y)]
+            print(" hidden layers:  (" + str(h) + ", " + str(i) + ")")
+            print("     avg delta:  ", sum(deltas)/len(deltas))
+            print("variance score:  ", explained_variance_score(test_Y, pred_Y))
+            print("     r squared:  ", r2_score(test_Y, pred_Y))
 
-    saveModel(model, "model.pkl")
+    #saveModel(model, "model.pkl")
 
 if __name__ == "__main__":
     main()

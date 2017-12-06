@@ -2,11 +2,10 @@
     visualize.py
 
     load a model from file, and visualize the nn.
-    model is a pipeline object, that contains a named_step "nn"
-"""
+    model is a pipeline object, that contains a named_step "nn" """
 import pickle
 from os.path import isfile
-from learn import loadData
+from learn import loadData, shapeData
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -22,6 +21,13 @@ def load(filename):
     else:
         print("Error: Model file not found. Run `python learn.py` first.")
 
+def barChart(data):
+    bs = [x/2+i%2 for i, x in enumerate(10**(np.arange(0,8)))]
+    plt.hist(data, bins=bs)
+    plt.xscale('log')
+    plt.show()
+    exit()
+
 def visualize(M):
     """ given a model M, visualize the neural network and how it predicts.
         note: M is assumed to be a pipeline containing a named step "nn"
@@ -30,7 +36,12 @@ def visualize(M):
 
     # training is a panda df
     training, labels = load("cleanedData.pkl")
+    #data = loadData()
+    #training, labels = shapeData(data)
+
     #print(training)
+
+    #barChart(labels)
 
     ce = CategoricalEncoder([7,9,12]) 
     imp = Imputer()
@@ -44,12 +55,7 @@ def visualize(M):
     pca = PCA()
     pca_data = pca.fit_transform(data)
 
-    normalized_labels = np.array(labels).reshape(-1, 1)
-    mmscaler = MinMaxScaler()
-    normalize_labels = [l[0] for l in mmscaler.fit_transform(normalized_labels)]
-
-
-    plt.scatter(pca_data[:,0], pca_data[:,1])
+    plt.hist(pca_data[:,0,20])
     #plt.pcolormesh(vmin=0., vmax=1., cmap='RdBu_r')
     plt.suptitle("PCA")
     plt.xlabel("PC1")
