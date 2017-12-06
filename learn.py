@@ -145,9 +145,8 @@ def initModel(L, F, R):
              ("imp", Imputer()),
              ("mmscaler", MinMaxScaler()),
              ("pca", PCA()),
-             ("nn", MLPRegressor(hidden_layer_sizes=L, max_iter=2500))])
-             #("nn", MLPRegressor(hidden_layer_sizes=L, learning_rate=R,
-             #                   activation=F, max_iter=2500))])
+             ("nn", MLPRegressor(hidden_layer_sizes=L, learning_rate=R,
+                                activation=F, max_iter=2500))])
 
 
 def saveModel(model, filename):
@@ -165,16 +164,6 @@ def main():
     labels = np.array(labels).reshape(-1, 1)
     mmscaler = MinMaxScaler()
     labels = [l[0] for l in mmscaler.fit_transform(labels)]
-
-    #writeToFile((training, labels), "cleanData.pkl")
-
-    # TODO use mmscaler.inverse_transform to compare to test labels
-
-    # TODO replace this split data with kfold
-    #   kf = KFold(n_folds=10)
-    #   train, test = kf.split(training, labels)
-
-    #training = training[:,:1000]
 
     train, test = splitData(training, labels, .9)
     print("Split data into {} training rows and {} test rows."
