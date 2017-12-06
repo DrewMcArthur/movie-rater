@@ -186,21 +186,21 @@ def main():
 
     print(len(train_X), "by", len(train_X[0]))
 
-    for f in range(40, 60):
+    for i in range(60, 125, 3):
         # create and train the model
-        model = initModel((f), 'logistic', 'adaptive')
+        model = initModel((i), 'logistic', 'adaptive')
         model.fit(train_X, train_Y)
 
         # test the model and report accuracy
         pred_Y = model.predict(test_X)
         deltas = [abs(p-l) for p, l in zip(pred_Y, test_Y)]
         #print(" hidden layers:  (" + str(h) + ", " + str(i) + ")")
-        print("len(hidden layer):  ", f)
+        print("len(hidden layer):  ", i)
         print("        avg delta:  ", sum(deltas)/len(deltas))
         #print("variance score:  ", explained_variance_score(test_Y, pred_Y))
         #print("     r squared:  ", r2_score(test_Y, pred_Y))
 
-        #saveModel(model, "model.pkl")
+    #saveModel(model, "model.pkl")
 
 if __name__ == "__main__":
     main()
