@@ -67,7 +67,7 @@ def processRatings(row):
 def shapeDatum(row):
     """ given one row of data, return: (list of input data, label) """
     label = row['revenue']
-    if label < 5000:
+    if label < 10000:
         row.update({"Err": "BADLABEL"})
         return (row, -1)
 
