@@ -8,7 +8,7 @@ from os.path import isfile
 from learn import loadData, shapeData
 import numpy as np
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 from sklearn.decomposition import PCA
 from CategoricalEncoder import CategoricalEncoder
@@ -55,11 +55,14 @@ def visualize(M):
     pca = PCA()
     pca_data = pca.fit_transform(data)
 
-    plt.hist(pca_data[:,0,20])
+    print(pca.components_[:100])
+    exit()
+
+    plt.scatter(*zip(*enumerate(pca.explained_variance_ratio_)))
     #plt.pcolormesh(vmin=0., vmax=1., cmap='RdBu_r')
     plt.suptitle("PCA")
-    plt.xlabel("PC1")
-    plt.ylabel("PC2")
+    plt.xlabel("Component")
+    plt.ylabel("EVR")
     plt.show()
 
     #print(len(nn.coefs_[0]))
