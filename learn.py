@@ -41,8 +41,7 @@ def loadData(*sections):
     for f in files:
         with open(f, 'rb') as handle:
             data += pickle.load(handle)
-
-    return data
+    return data 
 
 def flattenListValues(data):
     # turn columns with list values into multiple binary columns
@@ -123,19 +122,6 @@ def splitData(data, labels, ratio=0.5):
 
     return ( (data, labels), (test, testlabels) )
 
-def crossValTrain(data, labels, nFolds, model):
-    """ 
-        split the data and labels into n groups, and train the model on 
-        all but one of the groups, and return the accuracy for each round
-    """
-    # split the data into n groups
-
-    # for group in groups:
-    #   model.train(allothergroups)
-    #   model.test(group)
-    #   results.append(model.accuracy)
-    # return results
-
 def initModel(L, F, R):
     """ uses sklearn pipeline to initialize an AI model """
     cat_indices = [7, 9, 12]
@@ -147,7 +133,6 @@ def initModel(L, F, R):
              ("pca", PCA()),
              ("nn", MLPRegressor(hidden_layer_sizes=L, learning_rate=R,
                                 activation=F, max_iter=2500))])
-
 
 def saveModel(model, filename):
     with open(filename, 'wb') as handle:
@@ -173,22 +158,20 @@ def main():
     train_X, train_Y = train
     test_X, test_Y = test
 
-    print(len(train_X), "by", len(train_X[0]))
+    print(len(train_X), "rows by", len(train_X[0]), "cols")
 
-    for i in range(60, 125, 3):
-        # create and train the model
-        model = initModel((i), 'logistic', 'adaptive')
-        model.fit(train_X, train_Y)
+    # create and train the model
+    model = initModel((45), 'logistic', 'adaptive')
+    model.fit(train_X, train_Y)
 
-        # test the model and report accuracy
-        pred_Y = model.predict(test_X)
-        deltas = [abs(p-l) for p, l in zip(pred_Y, test_Y)]
-        #print(" hidden layers:  (" + str(h) + ", " + str(i) + ")")
-        print("len(hidden layer):  ", i)
-        print("        avg delta:  ", sum(deltas)/len(deltas))
-        #print("variance score:  ", explained_variance_score(test_Y, pred_Y))
-        #print("     r squared:  ", r2_score(test_Y, pred_Y))
+    # test the model and report accuracy
+    pred_Y = model.predict(test_X)
+    deltas = [abs(p-l) for p, l in zip(pred_Y, test_Y)]
+    print("        avg delta:  ", sum(deltas)/len(deltas))
+    print("variance score:  ", explained_variance_score(test_Y, pred_Y))
+    print("     r squared:  ", r2_score(test_Y, pred_Y))
 
+    // optionally, save the trained model.
     #saveModel(model, "model.pkl")
 
 if __name__ == "__main__":
